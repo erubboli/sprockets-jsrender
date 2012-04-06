@@ -1,0 +1,21 @@
+Sprockets jsRender/jsViews
+==========================
+
+This gem adds jsRender/jsViews templates as tilt templates for Sprockets 2 in Rails 3.1. 
+
+Thanks
+======
+inpired by sprockets-jquery-tmpl by Ryan Dy (https://github.com/rdy/sprockets-jquery-tmpl)
+
+Installing
+==========
+
+ 1. Add the gem to bundler or install:  `gem install sprockets-jsrender`
+ 2. Add to your app/assets/javascripts/application.js the following lines
+ //= require jsrender 
+ //= require jquery.observable
+ //= require jquery.views
+
+Any files in assets/javascripts/jsrender will be automatically added to list of templates using the path from that directory (i.e. assets/javascripts/jsrender/examples/index.jsr will be mapped to $.render("examples/index") )
+
+Copyright (c) 2012 Enrico Rubboli, released under the MIT license
