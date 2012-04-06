@@ -5,7 +5,8 @@ This gem adds jsRender/jsViews templates as tilt templates for Sprockets 2 in Ra
 
 Thanks
 ======
-inpired by sprockets-jquery-tmpl by Ryan Dy (https://github.com/rdy/sprockets-jquery-tmpl)
+Inpired by sprockets-jquery-tmpl by Ryan Dy (https://github.com/rdy/sprockets-jquery-tmpl)
+jsrender and jsviews are created bu Boris Moore (https://github.com/BorisMoore/jsrender)
 
 Installing
 ==========
