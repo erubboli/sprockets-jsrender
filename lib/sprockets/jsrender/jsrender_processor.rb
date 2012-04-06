@@ -19,9 +19,9 @@ module Sprockets
 
       def evaluate(scope, locals, &block)
         <<-JSRENDER
-(function($) {
-  $.template({#{scope.logical_path.gsub(/^jsrender\/(.*)$/i, "\\1").inspect}: "#{escape_javascript data}"});
-})(jQuery);
+(function() {
+  $.templates({#{scope.logical_path.gsub(/^jsrender\/(.*)$/i, "\\1").inspect}: "#{escape_javascript data}"});
+}).call(this);
         JSRENDER
       end
     end
