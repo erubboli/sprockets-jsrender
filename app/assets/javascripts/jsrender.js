@@ -6,7 +6,7 @@
  * Copyright 2012, Boris Moore
  * Released under the MIT License.
  */
-// informal pre beta commit counter: 3
+// informal pre beta commit counter: 6
 
 this.jsviews || this.jQuery && jQuery.views || (function( window, undefined ) {
 
@@ -81,7 +81,7 @@ function setDelimiters( openChars, closeChars ) {
 	// Build regex with new delimiters
 	jsv.rTag = rTag // make rTag available to JsViews (or other components) for parsing binding expressions
 		= secondOpenChar
-			//          tag    (followed by / space or })   or  colon     or  html or code
+			//          tag    (followed by / space or })   or  colon or html or code
 		+ "(?:(?:(\\w+(?=[\\/\\s" + firstCloseChar + "]))|(?:(\\w+)?(:)|(>)|(\\*)))"
 		//     params
 		+ "\\s*((?:[^" + firstCloseChar + "]|" + firstCloseChar + "(?!" + secondCloseChar + "))*?)"
@@ -356,8 +356,8 @@ function renderContent( data, context, parentView, path, index ) {
 // Generate a reusable function that will serve to render a template against data
 // (Compile AST then build template function)
 
-function syntaxError() {
-	throw "Syntax error";
+function syntaxError( message, e ) {
+	throw (e ? (e.name + ': "' + e.message + '"') : "Syntax error")  +  (message ? (" \n" + message) : "");
 }
 
 function tmplFn( markup, tmpl, bind ) {
@@ -466,10 +466,10 @@ function tmplFn( markup, tmpl, bind ) {
 	for ( i = 0; i < l; i++ ) {
 		// AST nodes: [ tagName, converter, params, content, hash, contentMarkup ]
 		node = astTop[ i ];
-		if ( node[ 0 ] === "*" ) {
-			code = code.slice( 0, i ? -1 : -3 ) + ";" + node[ 1 ] + (i + 1 < l ? "ret+=" : "");
-		} else if ( "" + node === node ) { // type string
+		if ( "" + node === node ) { // type string
 			code += '"' + node + '"+';
+		} else if ( node[ 0 ] === "*" ) {
+			code = code.slice( 0, i ? -1 : -3 ) + ";" + node[ 1 ] + (i + 1 < l ? "ret+=" : "");
 		} else {
 			tag = node[ 0 ];
 			converter = node[ 1 ];
@@ -498,7 +498,7 @@ function tmplFn( markup, tmpl, bind ) {
 					+ ")+";
 		}
 	}
-	code =  new Function( "data, view, j, b, u", fnDeclStr
+	code = fnDeclStr
 		+ (getsValue ? "v," : "")
 		+ (hasTag ? "t=j.tag," : "")
 		+ (hasConverter ? "c=j.convert," : "")
@@ -508,8 +508,13 @@ function tmplFn( markup, tmpl, bind ) {
 		+ (allowCode ? 'ret=' : 'return ')
 		+ code.slice( 0, -1 ) + ";\n\n"
 		+ (allowCode ? "return ret;" : "")
-		+ "}catch(e){return j.err(e);}"
-	);
+		+ "}catch(e){return j.err(e);}";
+
+	try {
+		code =  new Function( "data, view, j, b, u", code );
+	} catch(e) {
+		syntaxError( "Error in compiled template code:\n" + code, e );
+	}
 
 	// Include only the var references that are needed in the code
 	if ( tmpl ) {
@@ -626,8 +631,16 @@ function compile( name, tmpl, parent, options ) {
 		// Return the template object, if already compiled, or the markup string
 
 		if ( ("" + value === value) || value.nodeType > 0 ) {
-			// If selector is valid and returns at least one element, get first element
-			elem = value.nodeType > 0 ? value : !rTmplString.test( value ) && jQuery && jQuery( value )[0];
+			try {
+				elem = value.nodeType > 0
+					? value
+					: !rTmplString.test( value )
+						// If value is a string and does not contain HTML or tag content, then test as selector
+						&& jQuery && jQuery( value )[0];
+						// If selector is valid and returns at least one element, get first element
+						// If invalid, jQuery will throw. We will stay with the original string.
+			} catch(e) {}
+
 			if ( elem && elem.type ) {
 				// It is a script element
 				// Create a name for data linking if none provided
